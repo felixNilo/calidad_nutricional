@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block content %}
+    
+    <div class="hidden" id="loader">
+        <span id="loading-text" class="text-lg font-bold text-gray-700">Cargando datos</span>
+    </div>
+    {% comment %} <div class="flex items-center justify-center mt-6">
+        <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
+    </div>
+    
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Información del usuario</h2>
+        <pre class="text-md text-gray-800" id="user-info"></pre>
+    </div>
+    
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Desayuno</h2>
+        <pre class="text-md text-gray-800" id="breakfast-info"></pre>
+    </div>
+
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Adicionales Desayuno</h2>
+        <pre class="text-md text-gray-800" id="breakfast-additional-info"></pre>
+    </div>
+    
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Almuerzo</h2>
+        <pre class="text-md text-gray-800" id="lunch-info"></pre>
+    </div>
+
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Adicionales Almuerzo</h2>
+        <pre class="text-md text-gray-800" id="lunch-additional-info"></pre>
+    </div>
+    
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Cena</h2>
+        <pre class="text-md text-gray-800" id="dinner-info"></pre>
+    </div>
+
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Adicionales Cena</h2>
+        <pre class="text-md text-gray-800" id="dinner-additional-info"></pre>
+    </div>
+    
+    <div class="mt-6">
+        <h2 class="text-l font-semibold text-gray-900">Detalles desde la API</h2>
+        <pre class="text-md text-gray-800" id="api-details">Cargando...</pre>
+    </div> {% endcomment %}
+
+    <div class="flex items-center justify-center mt-6">
+        <h1 class="text-xl font-semibold text-gray-900">Dashboard Nutricional</h1>
+    </div>
+    
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-900">Resumen de Macronutrientes</h2>
+        <table class="w-full table-auto border-collapse border border-gray-300 mt-4">
+            <thead>
+                <tr>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Macronutriente</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Ingeridos</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Recomendados</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2">Hidratos de Carbono</td>
+                    <td class="border border-gray-300 px-4 py-2" id="totalHDEC">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="recommendedHDEC">Cargando...</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2">Proteínas</td>
+                    <td class="border border-gray-300 px-4 py-2" id="totalProteins">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="recommendedProteins">Cargando...</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2">Lípidos</td>
+                    <td class="border border-gray-300 px-4 py-2" id="totalLipids">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="recommendedLipids">Cargando...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-900">Visualización de Ingesta vs Recomendación</h2>
+        <div class="chart-container">
+            <canvas id="nutritionalChart"></canvas>
+        </div>
+    </div>
+
+    <div class="mt-6" id="container-email">
+        <label for="email-input" class="block text-sm font-medium text-gray-700">Enviar reporte al correo:</label>
+        <input id="email-input" type="email" class="mt-2 px-4 py-2 border rounded-md" placeholder="example@domain.com" required>
+        <button id="send-report-btn" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600">
+            Enviar
+        </button>
+    </div>
+    
+
+
+<script>
+    $(document).ready(function () {
+
+        const loader = $("#loader");
+        const loadingText = $("#loading-text");
+         // Mostrar loader mientras se realiza la solicitud AJAX
+        function showLoader() {
+            loader.show();
+            animateDots();
+        }
+
+        // Ocultar loader una vez que la solicitud AJAX haya terminado
+        function hideLoader() {
+            loader.hide();
+        }
+
+         // Animación de puntos suspensivos
+         function animateDots() {
+            let dots = 0;
+            setInterval(() => {
+                dots = (dots + 1) % 4; // Ciclar entre 0 y 3 puntos
+                loadingText.text("Cargando datos" + ".".repeat(dots));
+            }, 500);
+        }
+
+        // Datos enviados desde el servidor (incluirlos en el contexto del template)
+        const userInfo = {{ user_info|safe }};
+        const breakfastData = {{ breakfast_data|safe }};
+        const breakfastAdditionalData = {{ breakfast_additional_data|safe }};
+        const lunchData = {{ lunch_data|safe }};
+        const lunchAdditionalData = {{ lunch_additional_data|safe }};
+        const dinnerData = {{ dinner_data|safe }};
+        const dinnerAdditionalData = {{ dinner_additional_data|safe }};
+
+        // Insertar los datos iniciales
+        $("#user-info").text(JSON.stringify(userInfo, null, 2));
+        $("#breakfast-info").text(JSON.stringify(breakfastData, null, 2));
+        $("#breakfast-additional-info").text(JSON.stringify(breakfastAdditionalData, null, 2));
+        $("#lunch-info").text(JSON.stringify(lunchData, null, 2));
+        $("#lunch-additional-info").text(JSON.stringify(lunchAdditionalData, null, 2));
+        $("#dinner-info").text(JSON.stringify(dinnerData, null, 2));
+        $("#dinner-additional-info").text(JSON.stringify(dinnerAdditionalData, null, 2));
+
+        // Llamar a la API para obtener los detalles
+        showLoader();
+        $.ajax({
+            url: "{% url 'query_selected_comidas_details' %}", // Asegúrate de que esta ruta esté configurada en tu proyecto
+            type: "GET",
+            success: function (results) {
+                // Filtrar datos de comidas
+                const comidasData = (results.data.comidas && results.data.comidas.list) || [];
+                const alimentosData = (results.data.alimentos && results.data.alimentos.list) || [];
+                // Combinar ambos arrays
+                const combinedData = comidasData.concat(alimentosData);
+                console.log(combinedData)
+                // Mostrar los detalles de la API en el dashboard
+                $("#api-details").text(JSON.stringify(combinedData, null, 2));
+                // Calcular totales para comidas
+                const totalHDECComidas = comidasData.reduce((sum, item) => sum + (item.hdeC * item.count || 0), 0);
+                const totalProteinsComidas = comidasData.reduce((sum, item) => sum + (item.proteinas * item.count || 0), 0);
+                const totalLipidsComidas = comidasData.reduce((sum, item) => sum + (item.lipidos * item.count || 0), 0);
+                
+                console.log("Total HdeC (Comidas):", totalHDECComidas);
+                console.log("Total Proteínas (Comidas):", totalProteinsComidas);
+                console.log("Total Lípidos (Comidas):", totalLipidsComidas);
+
+                // Calcular totales para alimentos
+                let totalHDECAlimentos = 0;
+                let totalProteinsAlimentos = 0;
+                let totalLipidsAlimentos = 0;
+
+                alimentosData.forEach(alimento => {
+                    const equivalenciaFactor = alimento.equivalencia / 100; // Equivalencia como porcentaje
+                    console.log(alimento.name)
+                    totalHDECAlimentos += (alimento.hdeC * alimento.count|| 0) * equivalenciaFactor;
+                    totalProteinsAlimentos += (alimento.proteinas * alimento.count || 0) * equivalenciaFactor;
+                    totalLipidsAlimentos += (alimento.lipidos * alimento.count || 0) * equivalenciaFactor;
+
+                    console.log('hdc: ',(alimento.hdeC * alimento.count|| 0) * equivalenciaFactor)
+                    console.log('proteinas: ',(alimento.proteinas * alimento.count || 0) * equivalenciaFactor)
+                    console.log('lipidos: ',(alimento.lipidos * alimento.count || 0) * equivalenciaFactor)
+                });
+
+                console.log("Total HdeC (Alimentos):", totalHDECAlimentos);
+                console.log("Total Proteínas (Alimentos):", totalProteinsAlimentos);
+                console.log("Total Lípidos (Alimentos):", totalLipidsAlimentos);
+        
+                // Cálculos de porcentajes y valores recomendados para comidas
+                const totalComidas = totalHDECComidas + totalProteinsComidas + totalLipidsComidas + totalHDECAlimentos + totalProteinsAlimentos + totalLipidsAlimentos;
+                const percentHDECComidas = (totalHDECComidas + totalHDECAlimentos) / totalComidas;
+                const percentProteinsComidas = (totalProteinsComidas + totalProteinsAlimentos) / totalComidas;
+                const percentLipidsComidas = (totalLipidsComidas + totalLipidsAlimentos) / totalComidas;
+        
+                const ademComidas = totalHDECComidas * 0.25 + totalProteinsComidas * 0.1 + totalLipidsComidas * 0.1;
+                const recommendedKcalComidas = ademComidas + userInfo.tmr_with_activity;
+        
+                const recommendedHDECComidas = recommendedKcalComidas * percentHDECComidas;
+                const recommendedProteinsComidas = recommendedKcalComidas * percentProteinsComidas;
+                const recommendedLipidsComidas = recommendedKcalComidas * percentLipidsComidas;
+        
+                console.log("Porcentaje HdeC:", percentHDECComidas);
+                console.log("Porcentaje Proteínas:", percentProteinsComidas);
+                console.log("Porcentaje Lípidos:", percentLipidsComidas);
+        
+                // Visualización de comidas (solo comidas procesadas)
+                const ctx = document.getElementById("nutritionalChart").getContext("2d");
+                new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: ["HdeC (Comidas)", "Proteínas (Comidas)", "Lípidos (Comidas)"],
+                        datasets: [{
+                            label: "Ingeridos",
+                            data: [(totalHDECComidas+totalHDECAlimentos), (totalProteinsComidas+totalProteinsAlimentos), (totalLipidsComidas+totalLipidsAlimentos)],
+                            backgroundColor: "rgba(75, 192, 192, 0.6)",
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            borderWidth: 1
+                        },
+                        {
+                            label: "Recomendado",
+                            data: [recommendedHDECComidas, recommendedProteinsComidas, recommendedLipidsComidas],
+                            backgroundColor: "rgba(255, 159, 64, 0.6)",
+                            borderColor: "rgba(255, 159, 64, 1)",
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                });
+
+                // Actualizar tabla de resumen
+                $("#totalHDEC").text((totalHDECComidas + totalHDECAlimentos).toFixed(2));
+                $("#recommendedHDEC").text(recommendedHDECComidas.toFixed(2));
+
+                $("#totalProteins").text((totalProteinsComidas + totalProteinsAlimentos).toFixed(2));
+                $("#recommendedProteins").text(recommendedProteinsComidas.toFixed(2));
+
+                $("#totalLipids").text((totalLipidsComidas + totalLipidsAlimentos).toFixed(2));
+                $("#recommendedLipids").text(recommendedLipidsComidas.toFixed(2));
+
+            },
+            error: function (error) {
+                $("#api-details").text("Error al cargar los detalles desde la API.");
+                console.error("Error en la solicitud AJAX:", error);
+            },
+            complete: function () {
+                hideLoader(); // Ocultar loader después de la solicitud
+            }
+        });
+        
+    });
+
+    // Configurar el fondo blanco antes de capturar la imagen
+    function captureChartAsImage() {
+        const canvas = document.getElementById("nutritionalChart");
+        const ctx = canvas.getContext("2d");
+
+        // Guardar el estado actual del canvas
+        ctx.save();
+
+        // Establecer el fondo blanco
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Capturar la imagen en formato base64
+        const chartImage = canvas.toDataURL("image/png");
+
+        // Restaurar el estado original del canvas
+        ctx.restore();
+
+        return chartImage;
+    }
+    
+    $("#send-report-btn").on("click", function () {
+        const email = $("#email-input").val();
+        if (!email) {
+            // Mostrar mensaje de error en el elemento email-status-message
+            let statusMessage = $("#email-status-message");
+            if (statusMessage.length === 0) {
+                statusMessage = $("<p>")
+                    .attr("id", "email-status-message")
+                    .addClass("mt-4 text-sm text-red-600");
+                $("#container-email").append(statusMessage);
+            }
+            statusMessage.text("Por favor, introduce un correo electrónico válido.");
+            return;
+        }
+    
+        const chartImage = captureChartAsImage();
+
+        // Deshabilitar el botón y mostrar estado de carga
+        const sendButton = $(this);
+        sendButton.prop("disabled", true).text("Enviando...");
+
+        let statusMessage = $("#email-status-message");
+        if (statusMessage.length === 0) {
+            statusMessage = $("<p>")
+                .attr("id", "email-status-message")
+                .removeClass("text-red-500 text-green-900")
+                .addClass("mt-4 text-sm text-gray-500");
+            $("#container-email").append(statusMessage);
+        }
+        statusMessage.text("Enviando correo, por favor espera...");
+
+    
+        $.ajax({
+            url: "{% url 'send_report' %}",
+            type: "POST",
+            data: {
+                email: email,
+                chart_image: chartImage,
+                total_hdec: $("#totalHDEC").text(),
+                total_proteins: $("#totalProteins").text(),
+                total_lipids: $("#totalLipids").text(),
+                recommended_hdec: $("#recommendedHDEC").text(),
+                recommended_proteins: $("#recommendedProteins").text(),
+                recommended_lipids: $("#recommendedLipids").text(),
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+            },
+            success: function (response) {
+                statusMessage.removeClass("text-gray-500 text-red-500").addClass("text-green-900");
+                statusMessage.text("Correo enviado con éxito.");
+            },
+            error: function (error) {
+                statusMessage.removeClass("text-gray-500 text-green-500").addClass("text-red-600");
+                statusMessage.text("Ocurrió un error al enviar el correo. Por favor, intenta de nuevo.");
+                console.error("Error:", error);
+            },
+            complete: function () {
+                // Habilitar el botón nuevamente
+                sendButton.prop("disabled", false).text("Enviar");
+            },
+        });        
+    });
+    
+</script>
+{% endblock %}

@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <form id="user-form" method="POST" action="{% url 'set_dinner' %}">
+        {% csrf_token %}
+        <div>
+            <label for="lunch_time" class="block text-sm font-medium text-gray-700">¿A que hora Cenaste?:</label>
+            <input class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" 
+            type="time" id="lunch_time" name="lunch_time">
+        </div>
+
+        <input type="hidden" id="selected-comidas-input" name="selected_comidas">
+        <!-- Comidas seleccionadas -->
+        <div id="selected-comidas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
+
+        <div class="block text-sm font-medium text-gray-700" id="no-food-finded" style="display: none;">No encontré lo que estas buscando. Intenta buscando con otro nombre.</div>
+        <div id="message" class="block text-sm font-medium text-gray-700"></div>
+        <button class="w-full bg-green-600 text-white px-4 py-2 mt-4 rounded-md shadow hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150"
+            type="submit" id="next-button" style="margin-top: 20px;">Siguiente</button>
+        
+            <!-- Campo de búsqueda -->
+        <div id="search-container">
+            <label class="block text-sm mt-3 font-medium text-gray-700" for="search">Buscar Comidas:</label>
+            <input class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" 
+            type="text" id="search" placeholder="Escribe para buscar..." />
+        </div>
+        
+        <!-- Lista de comidas -->
+        <div id="comidas" style="display: none;">
+            <ul id="comidas-list">
+                {% for comida in comidas %}
+                <li class="block text-sm font-medium text-gray-700" data-name="{{ comida.name }}" data-type="{{ comida.type }}" data-porciones="{{ comida.porciones }}"> 
+                    <button class="select-comida">{{ comida.name }}</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </form>
+</div>
+<script>
+    $(document).ready(function () {
+
+        const storedDinnerTime = localStorage.getItem("dinner_time");
+        if (storedDinnerTime) {
+            $("#dinner_time").val(storedDinnerTime); // Establecer el valor del campo
+        }
+
+        const currentType = "dinner"; // Cambiar según la vista actual
+        $("#comidas").show();
+        $("#search-container").show();
+        
+        loadComidasFromStorage(currentType)
+        
+        const stopwords = ["el", "la", "de", "en", "con", "y", "lo", "a"]; // Lista de palabras excluidas
+        const $search = $("#search");
+        const $message = $("#message");
+        const $comidasList = $("#comidas-list");
+        const $selectedComidas = $("#selected-comidas");
+        const $searchMessageNoFood = $("#search-message-no-food");
+        const $searchMessageFood = $("#search-message-food");
+        const $noFoodFinded = $("#no-food-finded")
+        const $comidasContainer = $("#comidas");
+
+        // Función para actualizar el mensaje
+        function updateMessage() {
+            if ($selectedComidas.children().length > 0) {
+                $message.text("¿Comiste algo más en la Cena? Si no, avancemos.");
+            } else {
+                $message.text("¿Comiste algo en la Cena? Si no, avancemos.");
+            }
+        }
+
+        function updateVisibility() {
+            const hasSearch = $search.val().trim().length > 0; // Si el usuario escribió algo
+            const hasSelected = $selectedComidas.children().length > 0; // Si hay comidas seleccionadas
+            if (!hasSearch && !hasSelected) {
+                $searchMessageNoFood.show(); // Mostrar mensaje
+                $searchMessageFood.hide(); // Mostrar mensaje
+                $noFoodFinded.hide()
+                $comidasContainer.hide(); // Ocultar lista de comidas
+            } 
+            if (!hasSearch && hasSelected) {
+                $searchMessageFood.show(); // Mostrar mensaje
+                $searchMessageNoFood.hide(); // Ocultar mensaje
+                $noFoodFinded.hide()
+                $comidasContainer.hide(); // Mostrar lista de comidas
+            }
+            if (hasSearch && hasSelected) {
+                $searchMessageNoFood.hide(); // Ocultar mensaje
+                $searchMessageFood.show(); // Mostrar mensaje
+                $noFoodFinded.hide()
+                $comidasContainer.show(); // Mostrar lista de comidas
+            }
+            if (hasSearch && !hasSelected) {
+                $searchMessageNoFood.show(); // Ocultar mensaje
+                $searchMessageFood.hide(); // Mostrar mensaje
+                $noFoodFinded.hide()
+                $comidasContainer.show(); // Mostrar lista de comidas
+            }
+
+            if($comidasList.children("li:visible").length==0 && hasSearch){
+                $noFoodFinded.show()
+            }
+        }
+    
+        // Inicializar visibilidad
+        updateVisibility();
+        updateMessage();
+
+        // Filtrar comidas al escribir en el campo de búsqueda
+        $search.on("input", function () {
+            const query = $(this).val().toLowerCase().trim();
+            
+            // Eliminar acentos y puntuación
+            const normalize = (str) =>
+                str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,-]/g, "");
+
+            const normalizedQuery = normalize(query);
+
+            // Dividir en términos clave, eliminando palabras irrelevantes (stopwords)
+            const keywords = normalizedQuery.split(/\s+/).filter((word) => !stopwords.includes(word));
+
+            $comidasList.children("li").each(function () {
+                const type = $(this).data("type"); // Obtener el atributo `type` del elemento
+                const name = $(this).data("name"); // Obtener el nombre para referencia
+                const porciones = $(this).data("porciones");
+            });
+
+            // Crear array para almacenar resultados con relevancia
+            const results = [];
+
+            $comidasList.children("li").each(function () {
+                const comidaName = $(this).data("name").toLowerCase();
+                const normalizedComidaName = ` ${normalize(comidaName)} `;
+
+                // Determinar relevancia
+                let priority = 3; // Valor más alto = menos relevante
+                if (keywords.every((keyword) => normalizedComidaName.includes(` ${keyword} `))) {
+                    priority = 1; // Coincidencia exacta
+                } else if (keywords.some((keyword) => normalizedComidaName.includes(keyword))) {
+                    priority = 2; // Coincidencia parcial
+                }
+
+                // Agregar elemento y relevancia al array de resultados
+                results.push({ element: $(this), priority });
+            });
+
+            // Ordenar resultados por relevancia
+            results.sort((a, b) => a.priority - b.priority);
+
+            // Mostrar/ocultar elementos según relevancia
+            results.forEach(({ element, priority }) => {
+                if (priority <= 2) {
+                    $comidasList.append(element); // Mover elementos relevantes al inicio
+                    element.show();
+                } else {
+                    element.hide(); // Ocultar irrelevantes
+                }
+            });
+
+            // Actualizar visibilidad adicional si es necesario
+            updateVisibility();
+        });
+
+
+        // Manejar selección de comida
+        $comidasList.on("click", ".select-comida", function () {
+            const $button = $(this);
+            const $li = $button.closest("li");
+            const comidaName = $li.data("name");
+        
+            const type = $li.data("type"); // Tipo de comida o alimento
+            let porciones = $li.data("porciones");
+            console.log('porcion leida: ', porciones)
+            if (typeof porciones === "string") {
+                try {
+                    porciones = JSON.parse(porciones.replace(/'/g, '"'));
+                } catch (error) {
+                    console.error("Error al parsear porciones:", error);
+                    porciones = [];
+                }
+            }
+        
+            let porcionOptions = ""; // Opciones para el select
+            if (type === "comida") {
+                porcionOptions = `
+                    <option value="chica" selected>Chica</option>
+                    <option value="mediana">Mediana</option>
+                    <option value="grande">Grande</option>
+                `;
+            } else if (type === "alimento" && Array.isArray(porciones)) {
+                porciones.forEach((porcion, index) => {
+                    porcionOptions += `
+                        <option value="medida_${index + 1}">${porcion.medida} (${porcion.equivalencia} g)</option>
+                    `;
+                });
+            }
+        
+            // Generar el HTML del elemento seleccionado
+            const selectedHTML = `
+                <div class="selected-item bg-white border rounded-lg shadow-md p-4 flex flex-col justify-between items-center"
+                    data-type="${type}"
+                    data-name="${comidaName}">
+                    <div class="text-center">
+                        <strong class="text-lg font-semibold text-gray-700">${comidaName}</strong>
+                    </div>
+                    <div class="w-full mt-2">
+                        <label for="porcion" class="text-sm text-gray-600">Porción:</label>
+                        <select class="w-full mt-1 block px-3 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 porcion-selector"
+                            data-porciones='${JSON.stringify(porciones)}'>
+                            ${porcionOptions}
+                        </select>
+                    </div>
+                    <button class="mt-3 px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 remove-comida">
+                        Eliminar
+                    </button>
+                </div>
+            `;
+            console.log('comidaName', comidaName, '. Porciones a agregar: ', porciones)
+            $selectedComidas.append(selectedHTML);
+
+            // Ocultar la comida de la lista de resultados
+            $li.remove();
+
+            // Limpiar el texto del buscador
+            $search.val("");
+
+            // Crear objeto para almacenar en localStorage
+            const comida = {
+                name: comidaName,
+                porcion: type === "comida" ? "chica" : "medida_1", // Selección inicial
+                comidaType: type,
+                porciones: porciones, // Guardar todas las porciones
+            };
+
+            // Guardar en localStorage
+            saveComidaToStorage(currentType, comida);
+            updateVisibility();
+            updateMessage();
+        });
+                
+        
+        $selectedComidas.on("change", ".porcion-selector", function () {
+            const $item = $(this).closest(".selected-item");
+            const comidaName = $item.find("strong").text().trim();
+            const porcion = $(this).val();
+    
+            updateComidaPorcionInStorage(currentType, comidaName, porcion);
+        });
+
+        $("#user-form").on("submit", function (event) {
+        
+            const breakfastTime = $("#breakfast_time").val(); // Obtener el valor del tiempo
+
+            localStorage.setItem("breakfast_time", breakfastTime); // Guardar en localStorage
+        
+            const storedData = JSON.parse(localStorage.getItem("selectedComidas") || "{}");
+            const selectedComidas = storedData[currentType] || [];
+        
+            // Iterar sobre las comidas seleccionadas y actualizar las porciones
+            $("#selected-comidas .selected-item").each(function (index, element) {
+                const comidaName = $(element).data("name");
+                const porcion = $(element).find(".porcion-selector").val(); // Obtener la porción seleccionada
+        
+                // Actualizar la porción en la lista de comidas seleccionadas
+                const comida = selectedComidas.find((c) => c.name === comidaName);
+                if (comida) {
+                    comida.porcion = porcion; // Actualizar la porción
+                }
+            });
+        
+            // Guardar los datos actualizados en el localStorage
+            storedData[currentType] = selectedComidas;
+            localStorage.setItem("selectedComidas", JSON.stringify(storedData));
+        
+            // Pasar las comidas actualizadas al campo oculto
+            $("#selected-comidas-input").val(JSON.stringify(selectedComidas));
+        
+            // Realizar el envío manual del formulario
+            this.submit();
+        });
+
+        $selectedComidas.on("click", ".remove-comida", function () {
+            const $item = $(this).closest(".selected-item");
+            const comidaName = $item.find("strong").text().trim(); // Extraer texto del <strong>
+            const type = $item.data("type");
+            const $select = $item.find(".porcion-selector");
+            let porciones = $select.data("porciones");
+            if (!porciones){
+                porciones = $item.data("porciones")
+            }
+            console.log('item: ', $item)
+            console.log('porciones: ', porciones)
+            
+            
+            if (typeof porciones === "string") {
+                try {
+                    porciones = JSON.parse(porciones);
+                } catch (error) {
+                    console.error("Error al parsear porciones:", error);
+                    porciones = [];
+                }
+            }
+        
+            // Eliminar visualmente del contenedor de comidas seleccionadas
+            $item.remove();
+        
+            // Remover del almacenamiento local
+            console.log(`Eliminando del storage: ${comidaName} del tipo ${currentType}`);
+            removeComidaFromStorage(currentType, comidaName);
+            console.log('eliminando las porciones: ',JSON.stringify(porciones));
+            // Volver a agregar el elemento a la lista de comidas
+            const listHTML = `
+                <li class="block text-sm font-medium text-gray-700" 
+                    data-name="${comidaName}" 
+                    data-type="${type}" 
+                    data-porciones='${JSON.stringify(porciones)}'>
+                    <button class="select-comida">${comidaName}</button>
+                </li>
+            `;
+            $comidasList.append(listHTML);
+            updateVisibility();
+            updateMessage();
+        });
+        
+        // Función para guardar en localStorage
+        function saveComidaToStorage(type, comida) {
+            const storedData = JSON.parse(localStorage.getItem('selectedComidas') || '{}');
+            if (!storedData[type]) {
+                storedData[type] = [];
+            }
+
+            // Verificar si ya existe el elemento
+            const exists = storedData[type].some(c => c.name === comida.name);
+            if (!exists) {
+                storedData[type].push(comida);
+                localStorage.setItem('selectedComidas', JSON.stringify(storedData));
+            }
+        }
+        
+        
+        // Función para remover del almacenamiento local
+        function removeComidaFromStorage(type, comidaName) {
+            const storedData = JSON.parse(localStorage.getItem("selectedComidas") || "{}");
+            if (storedData[type]) {
+                const originalLength = storedData[type].length;
+                storedData[type] = storedData[type].filter(comida => comida.name !== comidaName);
+                
+                // Verificar si se eliminó correctamente
+                if (storedData[type].length < originalLength) {
+                    console.log(`Elemento ${comidaName} eliminado del storage.`);
+                } else {
+                    console.warn(`Elemento ${comidaName} no encontrado en el storage.`);
+                }
+                localStorage.setItem("selectedComidas", JSON.stringify(storedData)); // Guardar los cambios en localStorage
+            } else {
+                console.warn(`No se encontró el tipo ${type} en el storage.`);
+            }
+        }
+
+        function updateComidaPorcionInStorage(type, comidaName, porcion) {
+            const storedData = JSON.parse(localStorage.getItem("selectedComidas") || "{}");
+            if (storedData[type]) {
+                const comida = storedData[type].find(c => c.name === comidaName);
+                if (comida) {
+                    comida.porcion = porcion;
+                    localStorage.setItem("selectedComidas", JSON.stringify(storedData));
+                }
+            }
+        }
+
+        function loadComidasFromStorage(mealType) {
+            const storedData = JSON.parse(localStorage.getItem('selectedComidas') || '{}');
+            const comidas = storedData[mealType] || [];
+            console.log("comidas desde storage: ", comidas);
+            
+            comidas.forEach(function (comida) {
+                let porcionOptions = "";
+        
+                if (comida.comidaType === "comida") {
+                    // Opciones para comida
+                    porcionOptions = `
+                        <option value="chica" ${comida.porcion === 'chica' ? 'selected' : ''}>Chica</option>
+                        <option value="mediana" ${comida.porcion === 'mediana' ? 'selected' : ''}>Mediana</option>
+                        <option value="grande" ${comida.porcion === 'grande' ? 'selected' : ''}>Grande</option>
+                    `;
+                } else if (comida.comidaType === "alimento") {
+                    // Opciones para alimento
+                    if (Array.isArray(comida.porciones)) {
+                        comida.porciones.forEach((porcion, index) => {
+                            porcionOptions += `
+                                <option value="medida_${index + 1}" ${comida.porcion === `medida_${index + 1}` ? 'selected' : ''}>
+                                    ${porcion.medida} (${porcion.equivalencia} g)
+                                </option>
+                            `;
+                        });
+                    } else {
+                        console.warn("Porciones no definidas o no son un array para:", comida.name);
+                    }
+                }
+                console.log('cargando las porciones: ', JSON.stringify(comida.porciones))
+                const selectedHTML = `
+                    <div class="selected-item bg-white border rounded-lg shadow-md p-4 flex flex-col justify-between items-center"
+                        data-type="${comida.comidaType}"
+                        data-name="${comida.name}"
+                        data-porciones='${JSON.stringify(comida.porciones)}'>
+                        <div class="text-center">
+                            <strong class="text-lg font-semibold text-gray-700">${comida.name}</strong>
+                        </div>
+                        <div class="w-full mt-2">
+                            <label for="porcion" class="text-sm text-gray-600">Porción:</label>
+                            <select class="w-full mt-1 block px-3 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 porcion-selector
+                                data-porciones='${JSON.stringify(comida.porciones)}'>
+                                ${porcionOptions}
+                            </select>
+                        </div>
+                        <button class="mt-3 px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 remove-comida">
+                            Eliminar
+                        </button>
+                    </div>
+                `;
+        
+                $selectedComidas.append(selectedHTML);
+        
+                // Eliminar la comida/alimento de la lista de resultados disponibles
+                $(`#comidas-list li[data-name="${comida.name}"]`).remove();
+            });
+        }
+        
+    });
+</script>
+{% endblock content %}

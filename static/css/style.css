@@ -1,0 +1,75 @@
+body {
+    background-color: #0d9c4d;
+}
+
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    z-index: 1000;
+    display: none; /* Ocultar por defecto */
+}
+
+#container-email {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px; /* Añade un margen superior para separar del gráfico */
+    text-align: center;
+}
+
+#selected-comidas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+    gap: 5px;
+    margin-bottom: 20px;
+}
+.selected-item {
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.selected-item strong {
+    margin-bottom: 5px;
+}
+
+#comidas-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+    gap: 5px;
+    margin-bottom: 20px;
+}
+.comida-item {
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.comida-item strong {
+    margin-bottom: 5px;
+}
+
+pre {
+    padding: 10px;
+}
+.chart-container {
+    background-color: white;
+    padding: 10px;
+    width: 100%;
+    height: 400px; /* Altura del gráfico */
+}

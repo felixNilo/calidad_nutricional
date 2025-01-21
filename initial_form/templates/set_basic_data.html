@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="hidden" id="loader">
+        <span id="loading-text" class="text-lg font-bold text-gray-700">Cargando datos</span>
+    </div>
+    <div>
+        <form id="user-form" method="POST" action="{% url 'set_basic_data' %}">
+            {% csrf_token %}
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">¿Como te llamas?:</label>
+                <input class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" 
+                type="text" id="name" name="name" required>
+            </div>
+            <div>
+                <label for="birthdate" class="block text-sm font-medium text-gray-700">¿Cuando naciste?:</label>
+                <input class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" 
+                type="date" id="birthdate" name="birthdate" required>
+            </div>
+            <div>
+                <label for="gender" class="block text-sm font-medium text-gray-700">¿Cual es tu sexo?:</label>
+                <select id="gender" name="gender" required
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    <option value="">Seleccione...</option>
+                    <option value="male">Masculino</option>
+                    <option value="female">Femenino</option>
+                    <option value="other">Otro</option>
+                </select>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700">¿Qué nivel de actividad física tienes?:</label>
+                <div class="mt-2 space-y-2">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="physical_activity" value="0" class="focus:ring-green-500 focus:border-green-500" required>
+                        <span class="ml-2">Sedentaria</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="physical_activity" value="1" class="focus:ring-green-500 focus:border-green-500">
+                        <span class="ml-2">Ligera (poca actividad)</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="physical_activity" value="2" class="focus:ring-green-500 focus:border-green-500">
+                        <span class="ml-2">Activo (moderado)</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="physical_activity" value="3" class="focus:ring-green-500 focus:border-green-500">
+                        <span class="ml-2">Muy activo (alta)</span>
+                    </label>
+                </div>
+            </div>
+            <div>
+                <label for="birthdate" class="block text-sm font-medium text-gray-700">¿Cuanto pesas?:</label>
+                <input class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" 
+                type="number" id="weight" name="weight" required>
+            </div>
+            <button class="w-full bg-green-600 text-white px-4 py-2 mt-4 rounded-md shadow hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150" type="submit">Siguiente</button>
+        </form>
+    </div>
+</div>
+<script>
+    const loadComidasUrl = "{% url 'load_comidas' %}"; // Definir URL
+    $(document).ready(function () {
+        setBasicData(); // Llamar a la función centralizada
+    });
+</script>
+{% endblock %}
