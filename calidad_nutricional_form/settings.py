@@ -37,7 +37,7 @@ CSRF_TRUSTED_ORIGINS = [
 SECRET_KEY = 'django-insecure-s-m6af(j(grm#mu5@hsdu5hhmegrlkgfj3^db+a57ye^+!ahyp'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'initial_form.middleware.FlowValidationMiddleware',
+
 ]
 
 ROOT_URLCONF = 'calidad_nutricional_form.urls'
@@ -136,11 +137,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_ROOT = ''
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),  # Directorio de archivos estáticos personalizados
-]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+if DEBUG:
+    STATIC_URL = '/static/'
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, "static"),  # Directorio de archivos estáticos personalizados
+    ]
+else:
+    STATIC_URL = '/static/'
+    STATICFILES_DIRS = []
+    
 MEDIA_URL = '/media/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
