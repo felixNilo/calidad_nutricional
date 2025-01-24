@@ -27,6 +27,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost',
     'http://127.0.0.1',
     'https://*.ngrok.app',
+    'http://calidadnutricional.duckdns.org',
+
 ]
 
 
@@ -43,6 +45,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '.ngrok.app',  # Permitir cualquier subdominio de ngrok.app
+    'calidadnutricional.duckdns.org',
 ]
 
 
