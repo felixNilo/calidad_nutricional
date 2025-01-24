@@ -1,0 +1,85 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+venv/
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.sqlite3
+db.sqlite3
+
+# Static files
+/static/
+/media/
+
+# Local settings
+*.local
+.env
+*.env
+
+# Secrets and keys
+*.key
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*.tmp
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# IDEs and text editors
+.vscode/
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and database files
+*.log
+*.sql
+*.sqlite3
+*.db
+
+# Nginx and Gunicorn files
+*.sock
+*.pid
+error.log
+access.log
+
+# Pytest and coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.coverage
+coverage.xml
+*.cover
+
+# Pipenv and Poetry
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# Build files
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Docker files
+*.log
+.dockerignore
+docker-compose.override.yml
