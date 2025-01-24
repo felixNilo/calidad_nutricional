@@ -44,13 +44,9 @@ def get_TMR_times_PA(gender, age, weight, physical_activity):
         weight = float(weight)
     except ValueError:
         raise ValueError("El peso debe ser un número válido.")
-    
-     # Si el género es 'other', tratarlo como 'male'
-    if gender == 'other':
-        gender = 'male'
 
     if gender not in ['male', 'female']:
-        raise ValueError("El género debe ser 'male', 'female' o 'other'.")
+        raise ValueError("El género debe ser 'male', 'female'")
 
     formula_TMR = {
         'male': [
