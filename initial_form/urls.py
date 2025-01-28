@@ -13,4 +13,5 @@ urlpatterns = [
     path("load_comidas/", views.load_comidas_from_api, name="load_comidas"),
     path('query_selected_comidas_details/', views.query_selected_comidas_details, name='query_selected_comidas_details'),
     path("send_report/", views.send_report, name="send_report"),
+    path('did-eat-breakfast/', views.did_eat_breakfast, name='did_eat_breakfast'),
 ]

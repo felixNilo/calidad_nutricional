@@ -49,10 +49,16 @@
                 </div>
             </div>
             <div>
-                <label for="birthdate" class="block text-sm font-medium text-gray-700">¿Cuanto pesas?:</label>
-                <input class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" 
-                type="number" id="weight" name="weight" required>
-            </div>
+                <label for="weight" class="block text-sm font-medium text-gray-700">¿Cuánto pesas?:</label>
+                <input 
+                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" 
+                    type="text" 
+                    id="weight" 
+                    name="weight" 
+                    pattern="^\d+([.,]\d+)?$" 
+                    title="Por favor, ingresa un número válido (puede incluir decimales)." 
+                    required>
+            </div>            
             <button class="w-full bg-green-600 text-white px-4 py-2 mt-4 rounded-md shadow hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150" type="submit">Siguiente</button>
         </form>
     </div>

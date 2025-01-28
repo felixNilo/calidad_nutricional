@@ -40,9 +40,7 @@
         const currentType = "dinner_additional"; // Cambiar según la vista actual
         $("#comidas").show();
         $("#search-container").show();
-        
-        loadComidasFromStorage(currentType)
-        
+                
         const stopwords = ["el", "la", "de", "en", "con", "y", "lo", "a"]; // Lista de palabras excluidas
         const $search = $("#search");
         const $message = $("#message");
@@ -51,6 +49,8 @@
         const $searchMessageFood = $("#search-message-food");
         const $noFoodFinded = $("#no-food-finded")
         const $comidasContainer = $("#comidas");
+
+        loadComidasFromStorage(currentType)
 
         // Función para actualizar el mensaje
         function updateMessage() {

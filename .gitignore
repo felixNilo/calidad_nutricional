@@ -79,3 +79,5 @@ dist/
 *.log
 .dockerignore
 docker-compose.override.yml
+
+calidad_nutricional_form/settings.py

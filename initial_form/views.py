@@ -109,6 +109,13 @@ def set_basic_data(request):
         except ValueError:
             return JsonResponse({"error": "El valor de actividad física no es válido."}, status=400)
 
+        # Validar peso y convertirlo a un número flotante
+        try:
+            weight = weight.replace(',', '.')  # Reemplazar coma con punto
+            weight = float(weight)
+        except ValueError:
+            return JsonResponse({'success': False, 'message': 'El peso debe ser un número válido.'}, status=400)
+        
         # Validar los datos (opcional)
         if not name or not birthdate or not gender:
             return JsonResponse({'success': False, 'message': 'Todos los campos son obligatorios.'}, status=400)
@@ -119,7 +126,7 @@ def set_basic_data(request):
         age = today.year - birthdate_obj.year - ((today.month, today.day) < (birthdate_obj.month, birthdate_obj.day))
         
         tmr_with_activity = get_TMR_times_PA(gender, age, weight, physical_activity)
-        print(tmr_with_activity)
+        #print(tmr_with_activity)
         # Guardar en la sesión
         request.session['user_info'] = {
             'name': name,
@@ -133,6 +140,7 @@ def set_basic_data(request):
         
         print(request.session['user_info'])
 
+        #return redirect('did_eat_breakfast') 
         return redirect('set_breakfast') 
     else:
         return render(request, 'set_basic_data.html')  # Asegúrate de que el template esté en el lugar correcto.
@@ -286,7 +294,7 @@ def set_breakfast(request):
     comidas_con_tipo = [{"name": comida["name"], "type": "comida", "porciones": comida["porciones"]} for comida in grouped_comidas]
     
     comidas_con_tipo += request.session.get("alimentos", {})
-    print(comidas_con_tipo)
+    # print(comidas_con_tipo)
     if request.method == 'POST':
         # Obtener la hora del desayuno
         breakfast_time = request.POST.get('breakfast_time', None)
@@ -852,3 +860,22 @@ def send_report(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+def did_eat_breakfast(request):
+    """
+    Vista que pregunta si el usuario consumió algo en el desayuno.
+    """
+    if request.method == 'POST':
+        did_eat = request.POST.get('did_eat')
+
+        # Validar respuesta
+        if did_eat == 'yes':
+            # Redirigir a la vista del desayuno
+            return redirect('set_breakfast')
+        elif did_eat == 'no':
+            # Redirigir a la siguiente pregunta o comida (desayuno adicional en este caso)
+            return redirect('set_breakfast_additional')
+        else:
+            return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
+
+    return render(request, 'did_eat_breakfast.html')
