@@ -140,8 +140,8 @@ def set_basic_data(request):
         
         print(request.session['user_info'])
 
-        #return redirect('did_eat_breakfast') 
-        return redirect('set_breakfast') 
+        return redirect('did_eat_breakfast') 
+        #return redirect('set_breakfast') 
     else:
         return render(request, 'set_basic_data.html')  # Asegúrate de que el template esté en el lugar correcto.
 
@@ -328,7 +328,7 @@ def set_breakfast(request):
         print("Hora:", request.session['breakfast']['time'])
         
         # Redirigir a la vista del almuerzo
-        return redirect('set_breakfast_additional')
+        return redirect('did_eat_breakfast_additional')
     
     return render(request, "set_breakfast.html", {"comidas": comidas_con_tipo})
 
@@ -384,7 +384,7 @@ def set_lunch(request):
         print("Hora:", request.session['lunch']['time'])
         
         # Redirigir a la vista del almuerzo
-        return redirect('set_lunch_additional')
+        return redirect('did_eat_lunch_additional')
     
     return render(request, "set_lunch.html", {"comidas": comidas_con_tipo})
 
@@ -437,7 +437,7 @@ def set_lunch_additional(request):
         print("Comidas seleccionadas:", request.session['data_lunch_additional']['selected_comidas'])
         
         # Redirigir a la vista de la cena
-        return redirect('set_dinner')
+        return redirect('did_eat_dinner')
     
     return render(request, "set_lunch_additional.html", {"comidas": comidas_con_tipo})
 
@@ -493,7 +493,7 @@ def set_dinner(request):
         print("Hora:", request.session['dinner']['time'])
         
         # Redirigir a la vista del almuerzo
-        return redirect('set_dinner_additional')
+        return redirect('did_eat_dinner_additional')
     
     return render(request, "set_dinner.html", {"comidas": comidas_con_tipo})
 
@@ -552,12 +552,12 @@ def set_dinner_additional(request):
 
 def dashboard(request):
     user_info = request.session.get('user_info', {})
-    breakfast_data = request.session.get('breakfast', {}).get('selected_comidas', [])
-    breakfast_additional_data = request.session.get('data_breakfast_additional', {}).get('selected_comidas', [])
-    lunch_data = request.session.get('lunch', {}).get('selected_comidas', [])
-    lunch_additional_data = request.session.get('data_lunch_additional', {}).get('selected_comidas', [])
-    dinner_data = request.session.get('dinner', {}).get('selected_comidas', [])
-    dinner_additional_data = request.session.get('data_dinner_additional', {}).get('selected_comidas', [])
+    breakfast_data = request.session.get('breakfast', {}).get('selected_comidas', []) or []
+    breakfast_additional_data = request.session.get('data_breakfast_additional', {}).get('selected_comidas', []) or []
+    lunch_data = request.session.get('lunch', {}).get('selected_comidas', []) or []
+    lunch_additional_data = request.session.get('data_lunch_additional', {}).get('selected_comidas', []) or []
+    dinner_data = request.session.get('dinner', {}).get('selected_comidas', []) or []
+    dinner_additional_data = request.session.get('data_dinner_additional', {}).get('selected_comidas', []) or []
 
     return render(request, "dashboard.html", {
         'user_info': user_info,
@@ -577,7 +577,9 @@ def get_selected_comidas_and_alimentos(request):
     # Procesar comidas con IDs
     for key in ['breakfast', 'data_breakfast_additional', 'lunch', 'data_lunch_additional', 'dinner', 'data_dinner_additional']:
         comidas = request.session.get(key, {}).get('selected_comidas', [])
+        print(comidas)
         selected_ids += [comida['id'] for comida in comidas if comida.get('comidaType') == 'comida' and 'id' in comida]
+        
         selected_alimentos += [{"name": alimento['name'], "equivalencia": alimento['equivalencia']} for alimento in comidas if alimento.get('comidaType') == 'alimento']
 
     return selected_ids, selected_alimentos
@@ -588,11 +590,10 @@ def query_selected_comidas_details(request):
 
     try:
         selected_ids, selected_alimentos = get_selected_comidas_and_alimentos(request)
-        #print('selected comidas ids: ', selected_ids)
-        #print('selected alimentos names: ', selected_names)
+        print('selected comidas: ', selected_ids, ' ', selected_alimentos)
 
         if not selected_ids and not selected_alimentos:
-            return JsonResponse({'success': False, 'error': 'No hay comidas ni alimentos seleccionados'}, status=400)
+            return JsonResponse({'success': False, 'error': 'No hay comidas ni alimentos seleccionados'}, status=500)
 
         results = {}
         
@@ -873,9 +874,104 @@ def did_eat_breakfast(request):
             # Redirigir a la vista del desayuno
             return redirect('set_breakfast')
         elif did_eat == 'no':
-            # Redirigir a la siguiente pregunta o comida (desayuno adicional en este caso)
-            return redirect('set_breakfast_additional')
+            # Redirigir a la siguiente pregunta (desayuno adicional en este caso)
+            return redirect('did_eat_breakfast_additional')
         else:
             return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
 
     return render(request, 'did_eat_breakfast.html')
+
+def did_eat_breakfast_additional(request):
+    """
+    Vista que pregunta si el usuario consumió algo entre el desayuno y el almuerzo
+    """
+    if request.method == 'POST':
+        did_eat = request.POST.get('did_eat')
+
+        # Validar respuesta
+        if did_eat == 'yes':
+            # Redirigir a la vista
+            return redirect('set_breakfast_additional')
+        elif did_eat == 'no':
+            # Redirigir a la siguiente pregunta o comida (almuerzo en este caso)
+            return redirect('did_eat_lunch')
+        else:
+            return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
+
+    return render(request, 'did_eat_breakfast_additional.html')
+
+def did_eat_lunch(request):
+    """
+    Vista que pregunta si el usuario consumió algo en el almuerzo
+    """
+    if request.method == 'POST':
+        did_eat = request.POST.get('did_eat')
+
+        # Validar respuesta
+        if did_eat == 'yes':
+            # Redirigir a la vista del almuerzo
+            return redirect('set_lunch')
+        elif did_eat == 'no':
+            # Redirigir a la siguiente pregunta o comida (almuerzo adicional en este caso)
+            return redirect('did_eat_lunch_additional')
+        else:
+            return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
+
+    return render(request, 'did_eat_lunch.html')
+
+def did_eat_lunch_additional(request):
+    """
+    Vista que pregunta si el usuario consumió algo entre el almuerzo y la cena
+    """
+    if request.method == 'POST':
+        did_eat = request.POST.get('did_eat')
+
+        # Validar respuesta
+        if did_eat == 'yes':
+            # Redirigir a la vista del almuerzo
+            return redirect('set_lunch_additional')
+        elif did_eat == 'no':
+            # Redirigir a la siguiente pregunta o comida (cena en este caso)
+            return redirect('did_eat_dinner')
+        else:
+            return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
+
+    return render(request, 'did_eat_lunch_additional.html')
+
+def did_eat_dinner(request):
+    """
+    Vista que pregunta si el usuario consumió algo en la cena
+    """
+    if request.method == 'POST':
+        did_eat = request.POST.get('did_eat')
+
+        # Validar respuesta
+        if did_eat == 'yes':
+            # Redirigir a la vista de la cena
+            return redirect('set_dinner')
+        elif did_eat == 'no':
+            # Redirigir a la siguiente pregunta o comida (cena adicional en este caso)
+            return redirect('did_eat_dinner_additional')
+        else:
+            return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
+
+    return render(request, 'did_eat_dinner.html')
+
+def did_eat_dinner_additional(request):
+    """
+    Vista que pregunta si el usuario consumió algo despues de la cena
+    """
+    if request.method == 'POST':
+        did_eat = request.POST.get('did_eat')
+
+        # Validar respuesta
+        if did_eat == 'yes':
+            # Redirigir a la vista
+            return redirect('set_dinner_additional')
+        elif did_eat == 'no':
+            # Redirigir al dashboard
+            return redirect('dashboard')
+        else:
+            return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
+
+    return render(request, 'did_eat_dinner_additional.html')

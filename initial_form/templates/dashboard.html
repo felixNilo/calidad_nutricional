@@ -91,7 +91,7 @@
 
     <div class="mt-6" id="container-email">
         <label for="email-input" class="block text-sm font-medium text-gray-700">Enviar reporte al correo:</label>
-        <input id="email-input" type="email" class="mt-2 px-4 py-2 border rounded-md" placeholder="example@domain.com" required>
+        <input id="email-input" type="email" class="mt-2 w-50 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition" placeholder="example@domain.com" required>
         <button id="send-report-btn" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600">
             Enviar
         </button>
@@ -123,7 +123,7 @@
                 loadingText.text("Cargando datos" + ".".repeat(dots));
             }, 500);
         }
-
+        
         // Datos enviados desde el servidor (incluirlos en el contexto del template)
         const userInfo = {{ user_info|safe }};
         const breakfastData = {{ breakfast_data|safe }};
@@ -132,7 +132,7 @@
         const lunchAdditionalData = {{ lunch_additional_data|safe }};
         const dinnerData = {{ dinner_data|safe }};
         const dinnerAdditionalData = {{ dinner_additional_data|safe }};
-
+        
         // Insertar los datos iniciales
         $("#user-info").text(JSON.stringify(userInfo, null, 2));
         $("#breakfast-info").text(JSON.stringify(breakfastData, null, 2));
@@ -141,7 +141,7 @@
         $("#lunch-additional-info").text(JSON.stringify(lunchAdditionalData, null, 2));
         $("#dinner-info").text(JSON.stringify(dinnerData, null, 2));
         $("#dinner-additional-info").text(JSON.stringify(dinnerAdditionalData, null, 2));
-
+        
         // Llamar a la API para obtener los detalles
         showLoader();
         $.ajax({
@@ -253,8 +253,21 @@
 
             },
             error: function (error) {
+
                 $("#api-details").text("Error al cargar los detalles desde la API.");
+                const errorMsge = "No has seleccionado comidas."
                 console.error("Error en la solicitud AJAX:", error);
+                if (error.responseJSON.error == "No hay comidas ni alimentos seleccionados"){
+                // Actualizar tabla de resumen
+                $("#totalHDEC").text(errorMsge);
+                $("#recommendedHDEC").text(errorMsge);
+
+                $("#totalProteins").text(errorMsge);
+                $("#recommendedProteins").text(errorMsge);
+
+                $("#totalLipids").text(errorMsge);
+                $("#recommendedLipids").text(errorMsge);
+                }
             },
             complete: function () {
                 hideLoader(); // Ocultar loader después de la solicitud

@@ -16,8 +16,11 @@ class FlowValidationMiddleware:
         # Nombres de las rutas (coherentes con urls.py)
         user_info_url = resolve_url('set_basic_data')  # Resolver URL a ruta real
         breakfast_url = resolve_url('set_breakfast')
+        breakfast_additional_url = resolve_url('set_breakfast_additional')
         lunch_url = resolve_url('set_lunch')
+        lunch_additional_url = resolve_url('set_lunch_additional')
         dinner_url = resolve_url('set_dinner')
+        dinner_additional_url = resolve_url('set_dinner_additional')
         dashboard_url = resolve_url('dashboard')
 
         # Rutas actuales
@@ -27,22 +30,21 @@ class FlowValidationMiddleware:
         if current_path == user_info_url or request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return None
 
-        # Validar flujo
-        if not request.session.get('user_info') and current_path != user_info_url:
-            return self._handle_redirect(request, user_info_url)
+        # Bloque desactualizado.
+        ## Solo se puede entrar al dashboard si es que hay data disponible.
 
-        if not request.session.get('breakfast') and current_path == lunch_url:
-            return self._handle_redirect(request, breakfast_url)
-
-        if not request.session.get('lunch') and current_path == dinner_url:
-            return self._handle_redirect(request, lunch_url)
-
-        if current_path == dashboard_url and (
-            not request.session.get('breakfast') or 
-            not request.session.get('lunch') or 
-            not request.session.get('dinner')
-        ):
-            return self._handle_redirect(request, user_info_url)
+        # if current_path == dashboard_url and (
+        #     not request.session.get('breakfast') and 
+        #     not request.session.get('data_breakfast_additional') and 
+        #     not request.session.get('lunch') and 
+        #     not request.session.get('data_lunch_additional') and 
+        #     not request.session.get('dinner') and 
+        #     not request.session.get('data_dinner_additional')
+        # ):
+        #     return self._handle_redirect(request, user_info_url)
+        
+        ##
+        #
 
         return None
 

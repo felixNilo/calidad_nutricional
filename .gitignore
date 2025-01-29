@@ -9,6 +9,9 @@ __pycache__/
 # Virtual environment
 venv/
 
+# App settings
+calidad_nutricional_form/settings.py
+
 # Django stuff:
 *.log
 *.pot
