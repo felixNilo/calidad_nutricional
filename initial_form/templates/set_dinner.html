@@ -142,11 +142,18 @@
                 }
 
                 // Agregar elemento y relevancia al array de resultados
-                results.push({ element: $(this), priority });
+                results.push({ element: $(this), priority, name: comidaName });
             });
 
-            // Ordenar resultados por relevancia
-            results.sort((a, b) => a.priority - b.priority);
+            // Ordenar resultados por relevancia y luego alfabéticamente
+            results.sort((a, b) => {
+                // Primero, ordenar por relevancia
+                if (a.priority !== b.priority) {
+                    return a.priority - b.priority;
+                }
+                // Si tienen la misma relevancia, ordenar alfabéticamente por nombre
+                return a.name.localeCompare(b.name);
+            });
 
             // Mostrar/ocultar elementos según relevancia
             results.forEach(({ element, priority }) => {
