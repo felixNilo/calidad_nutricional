@@ -30,20 +30,20 @@
             <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700">¿Qué nivel de actividad física tienes?:</label>
                 <div class="mt-2 space-y-2">
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="physical_activity" value="0" class="focus:ring-green-500 focus:border-green-500" required>
+                    <label class="inline-flex items-center" >
+                        <input type="radio" name="physical_activity" value="0" class="focus:ring-green-500 focus:border-green-500" required data-tippy-content="Sedentaria: Si pasas 80-90% o más del tiempo sentado o de pie.">
                         <span class="ml-2">Sedentaria</span>
                     </label>
                     <label class="inline-flex items-center">
-                        <input type="radio" name="physical_activity" value="1" class="focus:ring-green-500 focus:border-green-500">
+                        <input type="radio" name="physical_activity" value="1" class="focus:ring-green-500 focus:border-green-500" data-tippy-content="Ligera: Si pasas 75% del tiempo sentado o de pie.">
                         <span class="ml-2">Ligera (poca actividad)</span>
                     </label>
                     <label class="inline-flex items-center">
-                        <input type="radio" name="physical_activity" value="2" class="focus:ring-green-500 focus:border-green-500">
+                        <input type="radio" name="physical_activity" value="2" class="focus:ring-green-500 focus:border-green-500" data-tippy-content="Activo: Si pasas 25% del tiempo sentado o de pie.">
                         <span class="ml-2">Activo (moderado)</span>
                     </label>
                     <label class="inline-flex items-center">
-                        <input type="radio" name="physical_activity" value="3" class="focus:ring-green-500 focus:border-green-500">
+                        <input type="radio" name="physical_activity" value="3" class="focus:ring-green-500 focus:border-green-500" data-tippy-content="Muy activo: Si haces actividades físicas de esfuerzo diario.">
                         <span class="ml-2">Muy activo (alta)</span>
                     </label>
                 </div>
@@ -67,6 +67,16 @@
     const loadComidasUrl = "{% url 'load_comidas' %}"; // Definir URL
     $(document).ready(function () {
         setBasicData(); // Llamar a la función centralizada
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        tippy('[data-tippy-content]', {
+            placement: 'top', // Posición del tooltip
+            arrow: true, // Mostrar flecha
+            trigger: 'click', // Mostrar al hacer clic
+            interactive: true, // Permitir interacción con el tooltip
+            delay: [100, 0], // Retraso para mostrar/ocultar
+        });
     });
 </script>
 {% endblock %}
