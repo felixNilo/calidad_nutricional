@@ -12,6 +12,9 @@ venv/
 # App settings
 calidad_nutricional_form/settings.py
 
+# App settings
+calidad_nutricional_form/__pycache__
+
 # Django stuff:
 *.log
 *.pot
@@ -82,5 +85,3 @@ dist/
 *.log
 .dockerignore
 docker-compose.override.yml
-
-calidad_nutricional_form/settings.py
