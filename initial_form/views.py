@@ -91,7 +91,7 @@ def get_TMR_times_PA(gender, age, weight, physical_activity):
 
     # Multiplicar TMR por el factor de actividad física
     tmr_with_activity = tmr * activity_factors[gender][physical_activity]
-
+    #print(tmr_with_activity)
     return tmr_with_activity
         
 def set_basic_data(request):
@@ -579,7 +579,7 @@ def get_selected_comidas_and_alimentos(request):
     # Procesar comidas con IDs
     for key in ['breakfast', 'data_breakfast_additional', 'lunch', 'data_lunch_additional', 'dinner', 'data_dinner_additional']:
         comidas = request.session.get(key, {}).get('selected_comidas', [])
-        print(comidas)
+        #print(comidas)
         selected_ids += [comida['id'] for comida in comidas if comida.get('comidaType') == 'comida' and 'id' in comida]
         
         selected_alimentos += [{"name": alimento['name'], "equivalencia": alimento['equivalencia']} for alimento in comidas if alimento.get('comidaType') == 'alimento']
@@ -592,7 +592,7 @@ def query_selected_comidas_details(request):
 
     try:
         selected_ids, selected_alimentos = get_selected_comidas_and_alimentos(request)
-        print('selected comidas: ', selected_ids, ' ', selected_alimentos)
+        #print('selected comidas: ', selected_ids, ' ', selected_alimentos)
 
         if not selected_ids and not selected_alimentos:
             return JsonResponse({'success': False, 'error': 'No hay comidas ni alimentos seleccionados'}, status=500)
@@ -728,7 +728,7 @@ def set_breakfast_additional(request):
         request.session.modified = True
         
         # Debugging
-        print("Comidas seleccionadas:", request.session['data_breakfast_additional']['selected_comidas'])
+        #print("Comidas seleccionadas:", request.session['data_breakfast_additional']['selected_comidas'])
         
         # Redirigir a la vista del almuerzo
         return redirect('set_lunch')

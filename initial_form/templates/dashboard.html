@@ -177,9 +177,9 @@
                     totalProteinsAlimentos += (alimento.proteinas * alimento.count || 0) * equivalenciaFactor;
                     totalLipidsAlimentos += (alimento.lipidos * alimento.count || 0) * equivalenciaFactor;
 
-                    console.log('hdc: ',(alimento.hdeC * alimento.count|| 0) * equivalenciaFactor)
+                    /*console.log('hdc: ',(alimento.hdeC * alimento.count|| 0) * equivalenciaFactor)
                     console.log('proteinas: ',(alimento.proteinas * alimento.count || 0) * equivalenciaFactor)
-                    console.log('lipidos: ',(alimento.lipidos * alimento.count || 0) * equivalenciaFactor)
+                    console.log('lipidos: ',(alimento.lipidos * alimento.count || 0) * equivalenciaFactor)*/
                 });
 
                 console.log("Total HdeC (Alimentos):", totalHDECAlimentos);
@@ -188,21 +188,30 @@
         
                 // Cálculos de porcentajes y valores recomendados para comidas
                 const totalComidas = totalHDECComidas + totalProteinsComidas + totalLipidsComidas + totalHDECAlimentos + totalProteinsAlimentos + totalLipidsAlimentos;
-                const percentHDECComidas = (totalHDECComidas + totalHDECAlimentos) / totalComidas;
-                const percentProteinsComidas = (totalProteinsComidas + totalProteinsAlimentos) / totalComidas;
-                const percentLipidsComidas = (totalLipidsComidas + totalLipidsAlimentos) / totalComidas;
-        
-                const ademComidas = totalHDECComidas * 0.25 + totalProteinsComidas * 0.1 + totalLipidsComidas * 0.1;
+                const totalHDCEaten = (totalHDECComidas + totalHDECAlimentos)
+                const percentHDECComidas =  totalHDCEaten / totalComidas;
+                const totalProteinsEaten = (totalProteinsComidas + totalProteinsAlimentos)
+                const percentProteinsComidas = totalProteinsEaten / totalComidas;
+                const totalLipidsEaten = (totalLipidsComidas + totalLipidsAlimentos)
+                const percentLipidsComidas = totalLipidsEaten / totalComidas;
+
+                console.log("Porcentaje HdeC:", percentHDECComidas);
+                console.log("Porcentaje Proteínas:", percentProteinsComidas);
+                console.log("Porcentaje Lípidos:", percentLipidsComidas);
+
+
+                const ademComidas = totalProteinsEaten * 0.25 + totalHDCEaten * 0.1 + totalLipidsEaten * 0.1;
+                console.log("ADEM: ", ademComidas)
                 const recommendedKcalComidas = ademComidas + userInfo.tmr_with_activity;
         
                 const recommendedHDECComidas = recommendedKcalComidas * percentHDECComidas;
                 const recommendedProteinsComidas = recommendedKcalComidas * percentProteinsComidas;
                 const recommendedLipidsComidas = recommendedKcalComidas * percentLipidsComidas;
-        
-                console.log("Porcentaje HdeC:", percentHDECComidas);
-                console.log("Porcentaje Proteínas:", percentProteinsComidas);
-                console.log("Porcentaje Lípidos:", percentLipidsComidas);
-        
+                
+                console.log("Rec HdeC:", recommendedHDECComidas);
+                console.log("Rec Proteínas:", recommendedProteinsComidas);
+                console.log("Rec Lípidos:", recommendedLipidsComidas);
+
                 // Visualización de comidas (solo comidas procesadas)
                 const ctx = document.getElementById("nutritionalChart").getContext("2d");
                 new Chart(ctx, {
