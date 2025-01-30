@@ -22,6 +22,8 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 import tempfile
 from .tasks import send_email_task
+from django.utils import timezone
+from .models import UnmatchedSearch
 
 client = EspoAPI(settings.ESPO_API_URL, settings.ESPO_API_KEY)
 
@@ -975,3 +977,31 @@ def did_eat_dinner_additional(request):
             return JsonResponse({'success': False, 'message': 'Respuesta inválida.'}, status=400)
 
     return render(request, 'did_eat_dinner_additional.html')
+
+@csrf_exempt
+def guardar_busqueda_sin_coincidencia(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            term = data.get("term")
+            hasPriority1 = data.get("hasPriority1")
+            hasPriority2 = data.get("hasPriority2")
+            
+            if (not hasPriority1 and not hasPriority2):
+                hasResults = False
+            else:
+                hasResults = True
+                
+            if term:
+                # Verificar si el término ya existe en la base de datos
+                if not UnmatchedSearch.objects.filter(term=term).exists():
+                    # Guardar el término en la base de datos
+                    UnmatchedSearch.objects.create(term=term, has_results=hasResults, created_at=timezone.now())
+                    return JsonResponse({"status": "success"})
+                else:
+                    return JsonResponse({"status": "exists"})  # Término ya existe
+            else:
+                return JsonResponse({"status": "error", "message": "Término no proporcionado"}, status=400)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"status": "error", "message": "Método no permitido"}, status=405)

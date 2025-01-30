@@ -19,4 +19,5 @@ urlpatterns = [
     path('did_eat_lunch_additional/', views.did_eat_lunch_additional, name='did_eat_lunch_additional'),
     path('did_eat_dinner/', views.did_eat_dinner, name='did_eat_dinner'),
     path('did_eat_dinner_additional/', views.did_eat_dinner_additional, name='did_eat_dinner_additional'),
+    path("guardar-busqueda-sin-coincidencia/", views.guardar_busqueda_sin_coincidencia, name="guardar_busqueda_sin_coincidencia"),
 ]

@@ -49,6 +49,7 @@
         const $searchMessageFood = $("#search-message-food");
         const $noFoodFinded = $("#no-food-finded")
         const $comidasContainer = $("#comidas");
+        let results = [];
 
         loadComidasFromStorage(currentType)
 
@@ -113,8 +114,8 @@
                 const porciones = $(this).data("porciones");
             });
 
-            // Crear array para almacenar resultados con relevancia
-            const results = [];
+            // Reiniciar array para almacenar resultados con relevancia
+            results = [];
 
             $comidasList.children("li").each(function () {
                 const comidaName = $(this).data("name").toLowerCase();
@@ -156,6 +157,32 @@
             updateVisibility();
         });
 
+        // Función para verificar y guardar búsquedas sin coincidencia
+        const handleSearchSubmit = () => {
+            const query = $search.val().trim();
+            if (!query) return;
+
+            const hasPriority1 = results.some(result => result.priority === 1);
+            const hasPriority2 = results.some(result => result.priority === 2);
+            
+            if (!hasPriority1 || !hasPriority2) {
+                $noFoodFinded.show();
+                fetch("/guardar-busqueda-sin-coincidencia/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}",
+                    },
+                    body: JSON.stringify({ term: query, hasPriority1:hasPriority1, hasPriority2:hasPriority2 })
+                });
+            }
+        };
+
+        // Eventos para guardar
+        $(document).on("click", handleSearchSubmit); // Al hacer clic fuera
+        $(document).on("keypress", function(e) { // Al presionar Enter
+            if (e.which === 13) handleSearchSubmit();
+        });
 
         // Manejar selección de comida
         $comidasList.on("click", ".select-comida", function () {

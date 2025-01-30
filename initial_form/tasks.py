@@ -2,6 +2,8 @@
 from celery import shared_task
 from django.core.mail import EmailMessage
 import base64
+from django.utils import timezone
+from .models import UnmatchedSearch
 
 @shared_task
 def send_email_task(subject, body, recipient_list, pdf_content=None):
@@ -23,3 +25,28 @@ def send_email_task(subject, body, recipient_list, pdf_content=None):
     except Exception as e:
         return f"Error al enviar el correo: {str(e)}"
 
+@shared_task
+def notify_admin_unmatched_searches():
+    try:
+        # Obtener todas las búsquedas sin coincidencia del día
+        today = timezone.now().date()
+        unmatched_searches = UnmatchedSearch.objects.filter(created_at__date=today)
+
+        if unmatched_searches.exists():
+            # Crear el cuerpo del correo
+            subject = "Resumen de búsquedas sin coincidencia"
+            body = "Las siguientes búsquedas no tuvieron coincidencia hoy:\n\n"
+            body += "\n".join([f"- {search.term} ({search.created_at})" for search in unmatched_searches])
+
+            # Enviar el correo
+            send_email_task.delay(
+                subject=subject,
+                body=body,
+                recipient_list=["admin@example.com"],  # Correo del administrador
+            )
+
+            return f"Notificación enviada con {unmatched_searches.count()} búsquedas sin coincidencia."
+        else:
+            return "No hay búsquedas sin coincidencia para notificar hoy."
+    except Exception as e:
+        return f"Error al notificar al administrador: {str(e)}"
