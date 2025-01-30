@@ -42,7 +42,7 @@ def notify_admin_unmatched_searches():
             send_email_task.delay(
                 subject=subject,
                 body=body,
-                recipient_list=["angelmeya1332@gmail.com"],  # Correo del administrador
+                recipient_list=["felixjesusnilob@gmail.com"],  # Correo del administrador
             )
 
             return f"Notificación enviada con {unmatched_searches.count()} búsquedas sin coincidencia."
