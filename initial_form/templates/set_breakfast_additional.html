@@ -174,6 +174,18 @@
                         "X-CSRFToken": "{{ csrf_token }}",
                     },
                     body: JSON.stringify({ term: query, hasPriority1:hasPriority1, hasPriority2:hasPriority2 })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`Respuesta exitosa al guardar el término "${query}"`, data);
+                })
+                .catch(error => {
+                    console.error(`Error al guardar el término "${query}"`, error);
                 });
             }
         };
