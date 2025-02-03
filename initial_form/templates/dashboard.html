@@ -59,24 +59,32 @@
                 <tr>
                     <th class="border border-gray-300 px-4 py-2 text-left">Macronutriente</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">Ingeridos</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Gramos Ingeridos</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">Recomendados</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Gramos Recomendados</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td class="border border-gray-300 px-4 py-2">Hidratos de Carbono</td>
                     <td class="border border-gray-300 px-4 py-2" id="totalHDEC">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="totalGramsHDEC">Cargando...</td>
                     <td class="border border-gray-300 px-4 py-2" id="recommendedHDEC">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="recommendedGramsHDEC">Cargando...</td>
                 </tr>
                 <tr>
                     <td class="border border-gray-300 px-4 py-2">Proteínas</td>
                     <td class="border border-gray-300 px-4 py-2" id="totalProteins">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="totalGramsProteins">Cargando...</td>
                     <td class="border border-gray-300 px-4 py-2" id="recommendedProteins">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="recommendedGramsProteins">Cargando...</td>
                 </tr>
                 <tr>
                     <td class="border border-gray-300 px-4 py-2">Lípidos</td>
                     <td class="border border-gray-300 px-4 py-2" id="totalLipids">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="totalGramsLipids">Cargando...</td>
                     <td class="border border-gray-300 px-4 py-2" id="recommendedLipids">Cargando...</td>
+                    <td class="border border-gray-300 px-4 py-2" id="recommendedGramsLipids">Cargando...</td>
                 </tr>
             </tbody>
         </table>
@@ -148,6 +156,9 @@
             url: "{% url 'query_selected_comidas_details' %}", // Asegúrate de que esta ruta esté configurada en tu proyecto
             type: "GET",
             success: function (results) {
+                const factorHDC = 0.6
+                const factorProteins = 0.15
+                const factorLipids = 0.25
                 // Filtrar datos de comidas
                 const comidasData = (results.data.comidas && results.data.comidas.list) || [];
                 const alimentosData = (results.data.alimentos && results.data.alimentos.list) || [];
@@ -204,9 +215,9 @@
                 console.log("ADEM: ", ademComidas)
                 const recommendedKcalComidas = ademComidas + userInfo.tmr_with_activity;
         
-                const recommendedHDECComidas = recommendedKcalComidas * 0.6;
-                const recommendedProteinsComidas = recommendedKcalComidas * 0.15;
-                const recommendedLipidsComidas = recommendedKcalComidas * 0.25;
+                const recommendedHDECComidas = recommendedKcalComidas * factorHDC;
+                const recommendedProteinsComidas = recommendedKcalComidas * factorProteins;
+                const recommendedLipidsComidas = recommendedKcalComidas * factorLipids;
                 
                 console.log("Rec HdeC:", recommendedHDECComidas);
                 console.log("Rec Proteínas:", recommendedProteinsComidas);
@@ -220,7 +231,7 @@
                         labels: ["HdeC (Comidas)", "Proteínas (Comidas)", "Lípidos (Comidas)"],
                         datasets: [{
                             label: "Ingeridos",
-                            data: [(totalHDECComidas+totalHDECAlimentos), (totalProteinsComidas+totalProteinsAlimentos), (totalLipidsComidas+totalLipidsAlimentos)],
+                            data: [totalHDCEaten, totalProteinsEaten, totalLipidsEaten],
                             backgroundColor: "rgba(75, 192, 192, 0.6)",
                             borderColor: "rgba(75, 192, 192, 1)",
                             borderWidth: 1
@@ -251,14 +262,20 @@
                 });
 
                 // Actualizar tabla de resumen
-                $("#totalHDEC").text((totalHDECComidas + totalHDECAlimentos).toFixed(2));
+                $("#totalHDEC").text(totalHDCEaten.toFixed(2));
+                $("#totalGramsHDEC").text((totalHDCEaten*factorHDC).toFixed(2));
                 $("#recommendedHDEC").text(recommendedHDECComidas.toFixed(2));
+                $("#recommendedGramsHDEC").text((recommendedHDECComidas*factorHDC).toFixed(2));
 
-                $("#totalProteins").text((totalProteinsComidas + totalProteinsAlimentos).toFixed(2));
+                $("#totalProteins").text(totalProteinsEaten.toFixed(2));
+                $("#totalGramsProteins").text((totalProteinsEaten*factorProteins).toFixed(2));
                 $("#recommendedProteins").text(recommendedProteinsComidas.toFixed(2));
+                $("#recommendedGramsProteins").text((recommendedProteinsComidas*factorProteins).toFixed(2));
 
-                $("#totalLipids").text((totalLipidsComidas + totalLipidsAlimentos).toFixed(2));
+                $("#totalLipids").text(totalLipidsEaten.toFixed(2));
+                $("#totalGramsLipids").text((totalLipidsEaten*factorLipids).toFixed(2));
                 $("#recommendedLipids").text(recommendedLipidsComidas.toFixed(2));
+                $("#recommendedGramsLipids").text((recommendedLipidsComidas*factorLipids).toFixed(2));
 
             },
             error: function (error) {
