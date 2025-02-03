@@ -204,9 +204,9 @@
                 console.log("ADEM: ", ademComidas)
                 const recommendedKcalComidas = ademComidas + userInfo.tmr_with_activity;
         
-                const recommendedHDECComidas = recommendedKcalComidas * percentHDECComidas;
-                const recommendedProteinsComidas = recommendedKcalComidas * percentProteinsComidas;
-                const recommendedLipidsComidas = recommendedKcalComidas * percentLipidsComidas;
+                const recommendedHDECComidas = recommendedKcalComidas * 0.6;
+                const recommendedProteinsComidas = recommendedKcalComidas * 0.15;
+                const recommendedLipidsComidas = recommendedKcalComidas * 0.25;
                 
                 console.log("Rec HdeC:", recommendedHDECComidas);
                 console.log("Rec Proteínas:", recommendedProteinsComidas);
