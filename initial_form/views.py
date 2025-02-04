@@ -9,16 +9,17 @@ from django.conf import settings
 from datetime import datetime, time
 from django.core.exceptions import ValidationError
 from collections import Counter
-from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from io import BytesIO
-from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import base64
 from django.views.decorators.csrf import csrf_exempt
-from reportlab.platypus import Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+
 from reportlab.lib import colors
 import tempfile
 from .tasks import send_email_task
@@ -560,7 +561,6 @@ def dashboard(request):
     lunch_additional_data = request.session.get('data_lunch_additional', {}).get('selected_comidas', []) or []
     dinner_data = request.session.get('dinner', {}).get('selected_comidas', []) or []
     dinner_additional_data = request.session.get('data_dinner_additional', {}).get('selected_comidas', []) or []
-
     return render(request, "dashboard.html", {
         'user_info': user_info,
         'breakfast_data': breakfast_data,
@@ -570,6 +570,40 @@ def dashboard(request):
         'dinner_data': dinner_data,
         'dinner_additional_data': dinner_additional_data,
     })
+    
+def get_type_comidas_from_name(request,type,name):
+    type_comida = {}
+    
+    # Definir todas las claves de comidas
+    meal_keys = [ 'breakfast', 'data_breakfast_additional','lunch', 'data_lunch_additional', 'dinner', 'data_dinner_additional']
+    
+    for key in meal_keys:
+        comidas = request.session.get(key, {}).get('selected_comidas', [])
+        
+        for comida in comidas:
+            if comida.get('comidaType') == type and comida.get('name') == name:
+                # Obtener la porción según el tipo
+                if type == 'comida':
+                    # Buscar la porción seleccionada en las opciones disponibles
+                    selected_porcion = next(
+                        (p['medida'] for p in comida.get('porciones', []) 
+                         if p['id'] == comida.get('id')),
+                        comida.get('porcion', '')
+                    )
+                    equivalencia = None
+                else:
+                    # Buscar la medida equivalente en alimentos
+                    equivalencia = comida.get('equivalencia') 
+                    selected_porcion = next(
+                        (p['medida'] for p in comida.get('porciones', [])
+                         if p.get('equivalencia') == equivalencia),
+                        f"{equivalencia}g"  # Fallback por si no encuentra
+                    )
+                #type_comida[(f'{key}_equivalencia')] = equivalencia
+                type_comida[key] = {'porcion': selected_porcion, 'equivalencia': equivalencia}
+    
+    #print(f"Porciones para {name} ({type}):", type_comida)
+    return type_comida
 
 def get_selected_comidas_and_alimentos(request):
     # Extraer las comidas seleccionadas desde la sesión
@@ -581,7 +615,6 @@ def get_selected_comidas_and_alimentos(request):
         comidas = request.session.get(key, {}).get('selected_comidas', [])
         #print(comidas)
         selected_ids += [comida['id'] for comida in comidas if comida.get('comidaType') == 'comida' and 'id' in comida]
-        
         selected_alimentos += [{"name": alimento['name'], "equivalencia": alimento['equivalencia']} for alimento in comidas if alimento.get('comidaType') == 'alimento']
 
     return selected_ids, selected_alimentos
@@ -620,6 +653,8 @@ def query_selected_comidas_details(request):
                 ],
             }
             response_comidas = client.request('GET', 'comida', params=params_comidas)
+            #Aqui tengo el id, y con el id puedo obtener el nombre.
+            #pasar el nombre a una funcion que entregue una lista que contenga los tipos de comida en donde se encuentra el nombre.
             comidas_data = [
                 {
                     "id": comida['id'],
@@ -627,6 +662,7 @@ def query_selected_comidas_details(request):
                     "hdeC": comida['hdeC'],
                     "lipidos": comida['lipidos'],
                     "proteinas": comida['proteinas'],
+                    "types_comida":get_type_comidas_from_name(request,'comida',comida['name']),
                     "count": comidas_counter[comida['id']],  # Agregar cantidad al resultado
                 }
                 for comida in response_comidas.get('list', [])
@@ -655,6 +691,8 @@ def query_selected_comidas_details(request):
                 ],
             }
             response_alimentos = client.request('GET', 'ingrediente', params=params_alimentos)
+            #Aqui tengo el nombre del alimento
+            #pasar el nombre a una funcion que entregue una lista que contenga los tipos de comida en donde se encuentra el nombre
             # Combinar la información obtenida de la API con las equivalencias
             alimentos_data = []
             for alimento_api in response_alimentos.get('list', []):
@@ -669,6 +707,7 @@ def query_selected_comidas_details(request):
                     "lipidos": alimento_api['lipidos'],
                     "proteinas": alimento_api['protenas'],
                     "equivalencia": matching_alimento['equivalencia'],
+                    "types_comida":get_type_comidas_from_name(request,'alimento',alimento_api['name']),
                     "count": alimentos_counter[alimento_api['name']],
                 })
 
@@ -776,12 +815,27 @@ def send_report(request):
     try:
         email = request.POST.get("email")
         chart_image = request.POST.get("chart_image")
+        total_kcal = request.POST.get("total_kcal")
         total_hdec = request.POST.get("total_hdec")
+        total_grams_hdec = request.POST.get("total_grams_hdec")
         total_proteins = request.POST.get("total_proteins")
+        total_grams_proteins = request.POST.get("total_grams_proteins")
         total_lipids = request.POST.get("total_lipids")
+        total_grams_lipids = request.POST.get("total_grams_lipids")
+        recommended_kcal = request.POST.get("recommended_kcal")
         recommended_hdec = request.POST.get("recommended_hdec")
+        recommended_grams_hdec = request.POST.get("recommended_grams_hdec")
         recommended_proteins = request.POST.get("recommended_proteins")
+        recommended_grams_proteins = request.POST.get("recommended_grams_proteins")
         recommended_lipids = request.POST.get("recommended_lipids")
+        recommended_grams_lipids = request.POST.get("recommended_grams_lipids")
+        
+        # Leer las tablas dinámicas enviadas desde el frontend
+        tables_json = request.POST.get("tables", "[]")
+        try:
+            tables = json.loads(tables_json)
+        except json.JSONDecodeError:
+            tables = []
 
         if not email or not chart_image:
             return JsonResponse({"success": False, "error": "Datos insuficientes."}, status=400)
@@ -800,58 +854,100 @@ def send_report(request):
             temp_image.write(chart_data)
             temp_image_path = temp_image.name
 
-        # Crear el PDF
         buffer = BytesIO()
         pdf = canvas.Canvas(buffer, pagesize=letter)
+        page_width, page_height = letter
+        
+        LEFT_MARGIN = 50
+        RIGHT_MARGIN = 50
+        TOP_MARGIN = 750
+        BOTTOM_MARGIN = 50
+        FONT_SIZE_TITLE = 16
+        FONT_SIZE_SUBTITLE = 12
+        FONT_SIZE_TABLE_HEADER = 10
+        FONT_SIZE_TABLE_BODY = 9
+        ROW_HEIGHT = 16
+        LINE_PADDING = 10
+        TABLE_BOTTOM_PADDING = 10
 
-        # Añadir título al PDF
-        pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawString(100, 750, "Reporte Nutricional")
+        def get_table_style():
+            return TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4F81BD")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), FONT_SIZE_TABLE_HEADER),
+                ("FONTSIZE", (0, 1), (-1, -1), FONT_SIZE_TABLE_BODY),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+            ])
+        
+        def new_page():
+            pdf.showPage()
+            pdf.setFont("Helvetica-Bold", FONT_SIZE_SUBTITLE)
+            pdf.drawCentredString(page_width/2, TOP_MARGIN, "Reporte Nutricional (Continuación)")
+            return TOP_MARGIN - 30
 
-        try:
-            # Incrustar la imagen del gráfico en el PDF usando la ruta temporal
-            pdf.drawImage(temp_image_path, 100, 500, width=400, height=200)
-        except Exception as e:
-            print("Error al dibujar la imagen:", str(e))
-            return JsonResponse({"success": False, "error": "Error al insertar la imagen en el PDF."}, status=400)
-
-        # Eliminar el archivo temporal
+        current_y = TOP_MARGIN
+        pdf.setFont("Helvetica-Bold", FONT_SIZE_TITLE)
+        pdf.drawCentredString(page_width/2, current_y, "Reporte Nutricional")
+        current_y -= 30
+        
+        img_width, img_height = 400, 200
+        pdf.drawImage(temp_image_path, (page_width - img_width) / 2, current_y - img_height, width=img_width, height=img_height)
+        current_y -= (img_height + 20)
         os.unlink(temp_image_path)
 
-        # Añadir la tabla de resumen
-        pdf.setFont("Helvetica-Bold", 14)
-        pdf.drawString(100, 450, "Resumen de Macronutrientes")
-        data = [
-            ["Macronutriente", "Ingeridos", "Recomendados"],
-            ["Hidratos de Carbono", total_hdec, recommended_hdec],
-            ["Proteínas", total_proteins, recommended_proteins],
-            ["Lípidos", total_lipids, recommended_lipids],
+        pdf.setFont("Helvetica-Bold", FONT_SIZE_SUBTITLE)
+        pdf.drawCentredString(page_width/2, current_y, "Resumen de Macronutrientes")
+        current_y -= 20
+        
+        summary_data = [
+            ["Macronutriente", "Calorías\nIngeridas", "Gramos\nIngeridos", "Calorías\nRecomendadas", "Gramos\nRecomendados"],
+            ["Calorías", total_kcal, " ", recommended_kcal, " "],
+            ["Hidratos de Carbono", total_hdec, total_grams_hdec, recommended_hdec, recommended_grams_hdec],
+            ["Proteínas", total_proteins, total_grams_proteins, recommended_proteins, recommended_grams_proteins],
+            ["Lípidos", total_lipids, total_grams_lipids, recommended_lipids, recommended_grams_lipids],
         ]
+        
+        col_widths = [120, 80, 80, 100, 100]
+        summary_table = Table(summary_data, colWidths=col_widths)
+        summary_table.setStyle(get_table_style())
+        table_height = (len(summary_data) * ROW_HEIGHT) + TABLE_BOTTOM_PADDING
+        
+        if current_y - table_height < BOTTOM_MARGIN:
+            current_y = new_page()
+        
+        summary_table.wrapOn(pdf, page_width, table_height)
+        summary_table.drawOn(pdf, (page_width - sum(col_widths)) / 2, current_y - table_height)
+        current_y -= (table_height + 20)
+        
+        for table_data in tables:
+            pdf.setFont("Helvetica-Bold", FONT_SIZE_SUBTITLE)
+            title_height = FONT_SIZE_SUBTITLE + 5
+            if current_y - title_height < BOTTOM_MARGIN:
+                current_y = new_page()
+            pdf.drawCentredString(page_width/2, current_y, table_data["title"])
+            current_y -= title_height + 10
 
-        # Configurar la tabla
-        table = Table(data, colWidths=[150, 150, 150])
-        table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-            ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
-            ("GRID", (0, 0), (-1, -1), 1, colors.black),
-        ]))
-
-        # Dibujar la tabla en el PDF
-        table.wrapOn(pdf, 100, 400)
-        table.drawOn(pdf, 100, 300)
-
-        # Guardar y finalizar el PDF
+            table_content = [["Comida", "Porción", "HDC (g)", "Proteínas (g)", "Lípidos (g)"]] + table_data["rows"]
+            dynamic_table = Table(table_content, colWidths=[140, 70, 70, 70, 70])
+            dynamic_table.setStyle(get_table_style())
+            table_height = (len(table_content) * ROW_HEIGHT) + TABLE_BOTTOM_PADDING
+            
+            if current_y - table_height < BOTTOM_MARGIN:
+                current_y = new_page()
+            
+            dynamic_table.wrapOn(pdf, page_width, table_height)
+            dynamic_table.drawOn(pdf, (page_width - sum([140, 70, 70, 70, 70])) / 2, current_y - table_height)
+            current_y -= (table_height + 20)
+        
         pdf.save()
         buffer.seek(0)
         pdf_content = buffer.getvalue()
         buffer.close()
 
         pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
-
+        
         send_email_task.delay(
             subject="Reporte Nutricional",
             body="Adjunto encontrarás el reporte nutricional en formato PDF.",
