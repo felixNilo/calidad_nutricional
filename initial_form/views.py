@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 import math
 import json
 import os
 import csv
 from api.espocrm_client import EspoAPI
 from django.conf import settings
-from datetime import datetime, time
+from datetime import datetime
 from django.core.exceptions import ValidationError
 from collections import Counter
 from django.http import JsonResponse
@@ -16,10 +16,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import base64
 from django.views.decorators.csrf import csrf_exempt
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import inch
-
+from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 import tempfile
 from .tasks import send_email_task
@@ -768,9 +765,8 @@ def set_breakfast_additional(request):
         
         # Debugging
         #print("Comidas seleccionadas:", request.session['data_breakfast_additional']['selected_comidas'])
-        
-        # Redirigir a la vista del almuerzo
-        return redirect('set_lunch')
+
+        return redirect('did_eat_lunch')
     
     return render(request, "set_breakfast_additional.html", {"comidas": comidas_con_tipo})
 

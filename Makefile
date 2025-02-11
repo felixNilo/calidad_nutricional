@@ -33,6 +33,8 @@ venv: clean
 	@. $(VENV_DIR)/bin/activate && echo "Instalando dependencias..."
 	@$(PIP) install --upgrade pip
 	@$(PIP) install -r requirements.txt
+	@$(PYTHON) manage.py makemigrations
+	@$(PYTHON) manage.py migrate
 
 # 3. Reiniciar los servicios necesarios
 restart-services:
