@@ -139,12 +139,6 @@
             // Dividir en términos clave, eliminando palabras irrelevantes (stopwords)
             const keywords = normalizedQuery.split(/\s+/).filter((word) => !stopwords.includes(word));
 
-            $comidasList.children("li").each(function () {
-                const type = $(this).data("type"); // Obtener el atributo `type` del elemento
-                const name = $(this).data("name"); // Obtener el nombre para referencia
-                const porciones = $(this).data("porciones");
-            });
-
             // Reiniciar array para almacenar resultados con relevancia
             results = [];
 
