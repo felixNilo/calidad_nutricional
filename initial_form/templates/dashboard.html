@@ -63,9 +63,10 @@
 
     <div id="comidasDetalles"></div>
 
-    <div class="mt-6" id="container-email">
+    <div class="m-6" id="container-email">
         <label for="email-input" class="block text-sm font-medium text-gray-700">Enviar reporte al correo:</label>
         <input id="email-input" type="email" class="mt-2 w-50 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition" placeholder="example@domain.com" required>
+        <div id="container-email-msg"></div>
         <button id="send-report-btn" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600">
             Enviar
         </button>
@@ -403,7 +404,7 @@
                 statusMessage = $("<p>")
                     .attr("id", "email-status-message")
                     .addClass("mt-4 text-sm text-red-600");
-                $("#container-email").append(statusMessage);
+                $("#container-email-msg").append(statusMessage);
             }
             statusMessage.text("Por favor, introduce un correo electrónico válido.");
             return;
@@ -438,7 +439,7 @@
                 .attr("id", "email-status-message")
                 .removeClass("text-red-500 text-green-900")
                 .addClass("mt-4 text-sm text-gray-500");
-            $("#container-email").append(statusMessage);
+            $("#container-email-msg").append(statusMessage);
         }
         statusMessage.text("Enviando correo, por favor espera...");
 
