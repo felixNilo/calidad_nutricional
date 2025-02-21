@@ -56,9 +56,9 @@
         // Función para actualizar el mensaje
         function updateMessage() {
             if ($selectedComidas.children().length > 0) {
-                $message.text("¿Comiste algo más entre el Desayuno y el Almuerzo? Si no, avancemos.");
+                $message.text("¿Comiste algo más entre el Desayuno y el Almuerzo?");
             } else {
-                $message.text("¿Comiste algo entre el Desayuno y el Almuerzo? Si no, avancemos.");
+                $message.text("¿Que comiste entre el Desayuno y el Almuerzo?");
             }
         }
 
@@ -239,12 +239,12 @@
                     </div>
                     <div class="w-full mt-2">
                         <label for="porcion" class="text-sm text-gray-600">Porción:</label>
-                        <select class="w-full mt-1 block px-3 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 porcion-selector"
+                        <select class="w-full mt-1 block px-3 py-2 border border-green-500 rounded-md focus:ring-green-600 focus:border-green-600 porcion-selector"
                             data-porciones='${JSON.stringify(porciones)}'>
                             ${porcionOptions}
                         </select>
                     </div>
-                    <button class="mt-3 px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 remove-comida">
+                    <button class="mt-3 px-4 py-2 bg-red-400 text-white rounded-md shadow hover:bg-red-500 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 remove-comida">
                         Eliminar
                     </button>
                 </div>
@@ -442,12 +442,12 @@
                         </div>
                         <div class="w-full mt-2">
                             <label for="porcion" class="text-sm text-gray-600">Porción:</label>
-                            <select class="w-full mt-1 block px-3 py-2 border rounded-md focus:ring-green-500 focus:border-green-500 porcion-selector
+                            <select class="w-full mt-1 block px-3 py-2 border border-green-500 rounded-md focus:ring-green-600 focus:border-green-600 porcion-selector
                                 data-porciones='${JSON.stringify(comida.porciones)}'>
                                 ${porcionOptions}
                             </select>
                         </div>
-                        <button class="mt-3 px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 remove-comida">
+                        <button class="mt-3 px-4 py-2 bg-red-400 text-white rounded-md shadow hover:bg-red-500 focus:ring-2 focus:ring-offset-2 focus:ring-red-500 remove-comida">
                             Eliminar
                         </button>
                     </div>
