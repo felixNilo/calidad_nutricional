@@ -120,9 +120,9 @@
             url: "{% url 'query_selected_comidas_details' %}", // Asegúrate de que esta ruta esté configurada en tu proyecto
             type: "GET",
             success: function (results) {
-                const factorHDC = 0.6
-                const factorProteins = 0.15
-                const factorLipids = 0.25
+                const factorHDC = 3.75
+                const factorProteins = 4
+                const factorLipids = 9
                 // Filtrar datos de comidas
                 const comidasData = (results.data.comidas && results.data.comidas.list) || [];
                 const alimentosData = (results.data.alimentos && results.data.alimentos.list) || [];
@@ -210,18 +210,18 @@
                 });
 
                 // Calcular kilocalorías
-                const gramosHDC = totalHDC * factorHDC;
-                const gramosLipidos = totalLipidos * factorLipids;
-                const gramosProteinas = totalProteinas * factorProteins;
-                const totalKcal = totalHDC + totalLipidos + totalProteinas;
+                const kcalHDC = totalHDC * factorHDC;
+                const kcalLipidos = totalLipidos * factorLipids;
+                const kcalProteinas = totalProteinas * factorProteins;
+                const totalKcal = kcalHDC + kcalLipidos + kcalProteinas;
 
-                const ademComidas = totalProteinas * 0.25 + totalHDC * 0.1 + totalLipidos * 0.1;
+                const ademComidas = kcalProteinas * 0.25 + kcalHDC * 0.1 + kcalLipidos * 0.1;
                 console.log("ADEM: ", ademComidas)
                 const recommendedKcalComidas = ademComidas + userInfo.tmr_with_activity;
         
-                const recommendedHDECComidas = recommendedKcalComidas * factorHDC;
-                const recommendedProteinsComidas = recommendedKcalComidas * factorProteins;
-                const recommendedLipidsComidas = recommendedKcalComidas * factorLipids;
+                const recommendedHDECComidas = recommendedKcalComidas * 0.6;
+                const recommendedProteinsComidas = recommendedKcalComidas * 0.1;
+                const recommendedLipidsComidas = recommendedKcalComidas * 0.3;
                 
                 console.log("Rec HdeC:", recommendedHDECComidas);
                 console.log("Rec Proteínas:", recommendedProteinsComidas);
@@ -235,7 +235,7 @@
                         labels: ["HdeC (Comidas)", "Proteínas (Comidas)", "Lípidos (Comidas)"],
                         datasets: [{
                             label: "Calorías Ingeridas",
-                            data: [totalHDC, totalProteinas, totalLipidos],
+                            data: [kcalHDC, kcalProteinas, kcalLipidos],
                             backgroundColor: "rgba(75, 192, 192, 0.6)",
                             borderColor: "rgba(75, 192, 192, 1)",
                             borderWidth: 1
@@ -271,20 +271,20 @@
                 $("#recommendedKcal").text(recommendedKcalComidas.toFixed(2));
                 $("#recommendedGramsKcal").text(" ");
 
-                $("#totalHDEC").text(totalHDC.toFixed(2));
-                $("#totalGramsHDEC").text((totalHDC*factorHDC).toFixed(2));
+                $("#totalHDEC").text(kcalHDC.toFixed(2));
+                $("#totalGramsHDEC").text((totalHDC).toFixed(2));
                 $("#recommendedHDEC").text(recommendedHDECComidas.toFixed(2));
-                $("#recommendedGramsHDEC").text((recommendedHDECComidas*factorHDC).toFixed(2));
+                $("#recommendedGramsHDEC").text((recommendedHDECComidas/factorHDC).toFixed(2));
 
-                $("#totalProteins").text(totalProteinas.toFixed(2));
-                $("#totalGramsProteins").text((totalProteinas*factorProteins).toFixed(2));
+                $("#totalProteins").text(kcalProteinas.toFixed(2));
+                $("#totalGramsProteins").text((totalProteinas).toFixed(2));
                 $("#recommendedProteins").text(recommendedProteinsComidas.toFixed(2));
-                $("#recommendedGramsProteins").text((recommendedProteinsComidas*factorProteins).toFixed(2));
+                $("#recommendedGramsProteins").text((recommendedProteinsComidas/factorProteins).toFixed(2));
 
-                $("#totalLipids").text(totalLipidos.toFixed(2));
-                $("#totalGramsLipids").text((totalLipidos*factorLipids).toFixed(2));
+                $("#totalLipids").text(kcalLipidos.toFixed(2));
+                $("#totalGramsLipids").text((totalLipidos).toFixed(2));
                 $("#recommendedLipids").text(recommendedLipidsComidas.toFixed(2));
-                $("#recommendedGramsLipids").text((recommendedLipidsComidas*factorLipids).toFixed(2));
+                $("#recommendedGramsLipids").text((recommendedLipidsComidas/factorLipids).toFixed(2));
 
                 // 4. Función para generar las tablas
                 function generarTablaPorTipo(tipoComida, elementos) {
@@ -318,18 +318,18 @@
                                             <td class="border border-gray-300 px-4 py-2">${item.porcion}</td>
                                             <td class="border border-gray-300 px-4 py-2">
                                                 ${item.datosNutricionales.equivalencia !== null ? 
-                                                    ((item.datosNutricionales.hdeC * item.datosNutricionales.equivalencia / 100)*factorHDC).toFixed(2) : 
-                                                    (item.datosNutricionales.hdeC*factorHDC).toFixed(2)}
+                                                    (item.datosNutricionales.hdeC * item.datosNutricionales.equivalencia / 100).toFixed(2) : 
+                                                    (item.datosNutricionales.hdeC).toFixed(2)}
                                             </td>
                                             <td class="border border-gray-300 px-4 py-2">
                                                 ${item.datosNutricionales.equivalencia ? 
-                                                    ((item.datosNutricionales.proteinas * item.datosNutricionales.equivalencia / 100)*factorProteins).toFixed(2) : 
-                                                    (item.datosNutricionales.proteinas*factorProteins).toFixed(2)}
+                                                    (item.datosNutricionales.proteinas * item.datosNutricionales.equivalencia / 100).toFixed(2) : 
+                                                    (item.datosNutricionales.proteinas).toFixed(2)}
                                             </td>
                                             <td class="border border-gray-300 px-4 py-2">
                                                 ${item.datosNutricionales.equivalencia ? 
-                                                    ((item.datosNutricionales.lipidos * item.datosNutricionales.equivalencia / 100)*factorLipids).toFixed(2) : 
-                                                    (item.datosNutricionales.lipidos * factorLipids).toFixed(2)}
+                                                    (item.datosNutricionales.lipidos * item.datosNutricionales.equivalencia / 100).toFixed(2) : 
+                                                    (item.datosNutricionales.lipidos).toFixed(2)}
                                             </td>
                                         </tr>
                                     `).join('')}
