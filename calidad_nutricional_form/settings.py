@@ -10,7 +10,6 @@ import os
 ESPO_API_KEY = config('ESPO_API_KEY')
 ESPO_API_URL = config('ESPO_API_URL')
 
-
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -146,9 +145,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'mail.calidadnutricional.cl'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'app@calidadnutricional.cl'
-EMAIL_HOST_PASSWORD = 'bva[XEpFYgwB'
-DEFAULT_FROM_EMAIL = 'app@calidadnutricional.cl'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
